@@ -1,3 +1,8 @@
+import { bytesToHex, hexToNumber, numberToBytesBE } from "@li0ard/gost3413/dist/utils";
+
+export const bytesToNumberLE = (bytes: Uint8Array): bigint => hexToNumber(bytesToHex(bytes.slice().reverse()));
+export const numberToBytesLE = (n: bigint | number, len: number): Uint8Array => numberToBytesBE(n, len).reverse();
+
 export const equalBytes = (a: Uint8Array, b: Uint8Array): boolean => {
     if (a.length !== b.length) return false;
     let diff = 0;

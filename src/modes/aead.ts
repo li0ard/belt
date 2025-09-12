@@ -2,8 +2,7 @@ import { concatBytes, xor } from "@li0ard/gost3413/dist/utils";
 import { H } from "../const";
 import { Belt, ctr } from "../index";
 import { pad1 } from "@li0ard/gost3413";
-import { equalBytes, numberToBytesLE } from "@noble/curves/utils";
-import { gf2mMul, mulC } from "../utils";
+import { equalBytes, numberToBytesLE, gf2mMul, mulC } from "../utils";
 
 /**
  * Encrypts data using the Datawrap (DWP) mode
