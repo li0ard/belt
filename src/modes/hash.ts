@@ -100,7 +100,10 @@ export class BeltHash {
     }
 
     private beltEncrypt(key: Uint8Array, data: Uint8Array, output: Uint8Array) {
-        output.set(new Belt(key).encrypt(data))
+        const alignedData = new Uint8Array(data.length);
+        alignedData.set(data);
+    
+        output.set(new Belt(key).encrypt(alignedData));
     }
 
     /** Update hash buffer */
