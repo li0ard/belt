@@ -29,7 +29,7 @@ export const keyExpand = (key: Uint8Array): Uint8Array => {
  * @param iv Initialization vector
  * @param outputLen Output length (16/24/32)
  */
-export const keyTransform = (key: Uint8Array, level: Uint8Array, iv: Uint8Array, outputLen: number) => {
+export const keyTransform = (key: Uint8Array, level: Uint8Array, iv: Uint8Array, outputLen: number): Uint8Array => {
     if (outputLen > key.length || ![16, 24, 32].includes(outputLen) || ![16, 24, 32].includes(key.length)) throw new Error("Invalid key lengths: m must be <= n and both must be 16, 24, or 32");
     if (level.length !== 12) throw new Error("Level must be 12 bytes");
     if (iv.length !== 16) throw new Error("IV must be 16 bytes");
