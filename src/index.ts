@@ -1,7 +1,42 @@
+import { concatBytes } from "@li0ard/gost3413/dist/utils";
 import { H, keyIndex } from "./const";
+import { compress } from "./modes/compress";
 
 const RotHi = (x: number, r: number): number => (x << r) | (x >>> (32 - r));
 const G = (x: number, r: number): number => RotHi((H[x & 0xff]) | (H[(x >>> 8) & 0xff] << 8) | (H[(x >>> 16) & 0xff] << 16) | (H[x >>> 24] << 24), r);
+
+/**
+ * Key expand algorithm
+ * @param key Encryption key
+ */
+export const keyExpand = (key: Uint8Array): Uint8Array => {
+    if(key.length < 16 || key.length > 32) throw new Error("Invalid key length");
+    let ks = new Uint8Array(32);
+    ks.set(key);
+    if(key.length == 16) ks.set(key, 16);
+    else if(key.length == 24) {
+        for (let i = 0; i < 4; i++) ks[24 + i] = key[i] ^ key[i + 4] ^ key[i + 8];
+        for (let i = 0; i < 4; i++) ks[28 + i] = key[i + 12] ^ key[i + 16] ^ key[i + 20];
+    }
+    
+    return ks;
+}
+
+/**
+ * Key transform algorithm
+ * @param key Encryption key
+ * @param level Key level
+ * @param iv Initialization vector
+ * @param outputLen Output length (16/24/32)
+ */
+export const keyTransform = (key: Uint8Array, level: Uint8Array, iv: Uint8Array, outputLen: number) => {
+    if (outputLen > key.length || ![16, 24, 32].includes(outputLen) || ![16, 24, 32].includes(key.length)) throw new Error("Invalid key lengths: m must be <= n and both must be 16, 24, or 32");
+    if (level.length !== 12) throw new Error("Level must be 12 bytes");
+    if (iv.length !== 16) throw new Error("IV must be 16 bytes");
+    const offset = 4 * (key.length - 16) + 2 * (outputLen - 16);
+
+    return compress(concatBytes(H.subarray(offset, offset+4), level, iv, keyExpand(key)))[1].slice(0, outputLen);
+}
 
 /** BelT core class */
 export class Belt {
@@ -12,24 +47,7 @@ export class Belt {
      * BelT algorithm class
      * @param key Encryption key
      */
-    constructor(key: Uint8Array) {
-        this.ks = new Uint8Array(32);
-        if(key.length == 16) {
-            for(let i = 0; i<4; ++i) {
-                this.ks[i] = key[i];
-                this.ks[i+4] = key[i];
-            }
-        }
-        else if(key.length == 24) {
-            for(let i = 0; i<6; ++i) this.ks[i] = key[i];
-
-            this.ks[6] = (key[0]) ^ (key[1]) ^ (key[2]);
-            this.ks[7] = (key[3]) ^ (key[4]) ^ (key[5]);
-        }
-        else if(key.length == 32) {
-            for(let i = 0; i<32; ++i) this.ks[i] = key[i];
-        }
-    }
+    constructor(key: Uint8Array) { this.ks = keyExpand(key); }
 
     /** Encrypt block */
     encrypt(data: Uint8Array): Uint8Array {

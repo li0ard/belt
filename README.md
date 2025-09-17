@@ -33,6 +33,8 @@ bunx jsr i @li0ard/belt
 - [x] Ctr-Hash-Encrypt (CHE / AEAD)
 - [x] Datawrap (DWP / AEAD)
 - [x] Compress function
+- [x] Key expand function
+- [x] Key transform function (KRP)
 - [x] Blockwise disk encryption (BDE)
 - [x] Sectorwise disk encryption (SDE)
 - [x] Hash function (HASH)
