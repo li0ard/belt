@@ -1,17 +1,18 @@
 import { describe, test, expect } from "bun:test";
 import { mac } from "../src";
+import { hexToBytes } from "@li0ard/gost3413/dist/utils";
 
 describe("MAC", () => {
-    let key = Buffer.from("E9DEE72C8F0C0FA62DDB49F46F73964706075316ED247A3739CBA38303A98BF6", "hex");
-    let pt = Buffer.from("b194bac80a08f53b366d008e584a5de48504fa9d1bb6c7ac252e72c202fdce0d5be3d61217b96181fe6786ad716b890b", "hex");
+    const key = hexToBytes("E9DEE72C8F0C0FA62DDB49F46F73964706075316ED247A3739CBA38303A98BF6");
+    const pt = hexToBytes("B194BAC80A08F53B366D008E584A5DE48504FA9D1BB6C7AC252E72C202FDCE0D5BE3D61217B96181FE6786AD716B890B");
     test("#1", () => {
-        let ct = Buffer.from("7260DA60138F96C9", "hex");
+        const ct = hexToBytes("7260DA60138F96C9");
     
         expect(mac(key, pt.slice(0, 13))).toStrictEqual(ct);
     })
 
     test("#2", () => {
-        let ct = Buffer.from("2DAB59771B4B16D0", "hex");
+        const ct = hexToBytes("2DAB59771B4B16D0");
     
         expect(mac(key, pt)).toStrictEqual(ct);
     })
