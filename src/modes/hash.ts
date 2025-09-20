@@ -16,7 +16,7 @@ export class BeltHash {
     /** BelT hash mode */
     constructor() { this.reset(); }
     /** Create hash instance */
-    public static create() { return new BeltHash(); }
+    public static create(): BeltHash { return new BeltHash(); }
 
     /** Reset hash instance */
     public reset() {
@@ -32,7 +32,7 @@ export class BeltHash {
     /** Reset hash instance */
     public destroy() { this.reset(); }
 
-    _cloneInto(to?: BeltHash) {
+    _cloneInto(to?: BeltHash): BeltHash {
         to ||= new BeltHash();
 
         to.lenState = new Uint8Array(this.lenState);
@@ -46,7 +46,7 @@ export class BeltHash {
         return to;
     }
     /** Clone hash instance */
-    public clone() { return this._cloneInto(); }
+    public clone(): BeltHash { return this._cloneInto(); }
     
     private sigma1(u12: Uint8Array, u34: Uint8Array, result: Uint8Array): void {
         const u3u4 = new Uint8Array(this.blockLen);
@@ -169,7 +169,7 @@ export class BeltHash {
      * Finalize hash computation and write result into Uint8Array
      * @param buf - Output Uint8Array
      */
-    digestInto(buf: Uint8Array) {
+    digestInto(buf: Uint8Array): Uint8Array {
         if (this.bufLen > 0) {
             this.buffer.fill(0, this.bufLen);
             this.iteration(this.buffer, this.h, this.statePtr);
