@@ -143,6 +143,7 @@ export * from "./modes/ctr";
 export * from "./modes/disk";
 export * from "./modes/ecb";
 export * from "./modes/hash";
+export * from "./modes/hmac";
 export * from "./modes/kwp";
 export * from "./modes/mac";
 export * from "./modes/wbl";

@@ -3,32 +3,53 @@ import { H } from "../const";
 
 /** BelT hash mode */
 export class BeltHash {
-    private readonly BLOCK_LEN = 32;
-    private readonly HASH_BLOCK_LEN = 32;
+    public readonly blockLen = 32;
+    public readonly outputLen = 32;
 
-    private lenState: Uint8Array;
-    private statePtr: Uint8Array;
-    private buffer: Uint8Array;
-    private h: Uint8Array;
-    private bufLen: number;
-
-    private lenView: DataView;
+    private lenState!: Uint8Array;
+    private statePtr!: Uint8Array;
+    private buffer!: Uint8Array;
+    private h!: Uint8Array;
+    private bufLen!: number;
+    private lenView!: DataView;
 
     /** BelT hash mode */
-    constructor() {
+    constructor() { this.reset(); }
+    /** Create hash instance */
+    public static create() { return new BeltHash(); }
+
+    /** Reset hash instance */
+    public reset() {
         this.lenState = new Uint8Array(32);
         let lenPtr = this.lenState.subarray(0, 16);
         this.statePtr = this.lenState.subarray(16, 32);
         this.lenView = new DataView(lenPtr.buffer, lenPtr.byteOffset, 16);
         
-        this.buffer = new Uint8Array(this.HASH_BLOCK_LEN);
+        this.buffer = new Uint8Array(this.outputLen);
         this.h = new Uint8Array(H.slice(0, 32));
         this.bufLen = 0;
     }
+    /** Reset hash instance */
+    public destroy() { this.reset(); }
 
+    _cloneInto(to?: BeltHash) {
+        to ||= new BeltHash();
 
+        to.lenState = new Uint8Array(this.lenState);
+        const lenPtr = to.lenState.subarray(0, 16);
+        to.statePtr = to.lenState.subarray(16, 32);
+        to.lenView = new DataView(lenPtr.buffer, lenPtr.byteOffset, 16);
+        to.buffer = new Uint8Array(this.buffer);
+        to.h = new Uint8Array(this.h);
+        to.bufLen = this.bufLen;
+
+        return to;
+    }
+    /** Clone hash instance */
+    public clone() { return this._cloneInto(); }
+    
     private sigma1(u12: Uint8Array, u34: Uint8Array, result: Uint8Array): void {
-        const u3u4 = new Uint8Array(this.BLOCK_LEN);
+        const u3u4 = new Uint8Array(this.blockLen);
         
         for (let i = 0; i < 8; i++) {
             u3u4[i] = u34[i] ^ u34[i + 16];
@@ -40,8 +61,8 @@ export class BeltHash {
     }
 
     private sigma1Xor(x: Uint8Array, h: Uint8Array, state: Uint8Array): void {
-        const u3u4 = new Uint8Array(this.BLOCK_LEN);
-        const tmp = new Uint8Array(this.BLOCK_LEN);
+        const u3u4 = new Uint8Array(this.blockLen);
+        const tmp = new Uint8Array(this.blockLen);
         
         for (let i = 0; i < 8; i++) {
             u3u4[i] = h[i] ^ h[i + 16];
@@ -53,7 +74,7 @@ export class BeltHash {
     }
 
     private sigma2(x: Uint8Array, h: Uint8Array, result: Uint8Array): void {
-        const teta = new Uint8Array(this.BLOCK_LEN);
+        const teta = new Uint8Array(this.blockLen);
         const savedH = new Uint8Array(16);
         savedH.set(h.subarray(0, 16));
         
@@ -81,7 +102,7 @@ export class BeltHash {
         const low = this.lenView.getBigUint64(0, true);
         const high = this.lenView.getBigUint64(8, true);
         
-        const blockBits = BigInt(this.HASH_BLOCK_LEN * 8); // 256 bits
+        const blockBits = BigInt(this.outputLen * 8); // 256 bits
         const newLow = low + blockBits;
         
         if (newLow < low) this.lenView.setBigUint64(8, high + 1n, true);
@@ -112,7 +133,7 @@ export class BeltHash {
         const len = data.length;
         
         if (this.bufLen > 0) {
-            const remaining = this.HASH_BLOCK_LEN - this.bufLen;
+            const remaining = this.outputLen - this.bufLen;
             
             if (len < remaining) {
                 this.buffer.set(data, this.bufLen);
@@ -128,11 +149,11 @@ export class BeltHash {
             this.bufLen = 0;
         }
         
-        const fullBlocksEnd = len - (len % this.HASH_BLOCK_LEN);
+        const fullBlocksEnd = len - (len % this.outputLen);
         while (offset < fullBlocksEnd) {
             this.incrementLenBlock();
-            this.iteration(data.subarray(offset, offset + this.HASH_BLOCK_LEN), this.h, this.statePtr);
-            offset += this.HASH_BLOCK_LEN;
+            this.iteration(data.subarray(offset, offset + this.outputLen), this.h, this.statePtr);
+            offset += this.outputLen;
         }
         
         if (offset < len) {
@@ -144,18 +165,26 @@ export class BeltHash {
         return this;
     }
 
-    /** Finalize hash computation and return result as Uint8Array */
-    digest(): Uint8Array {
+    /**
+     * Finalize hash computation and write result into Uint8Array
+     * @param buf - Output Uint8Array
+     */
+    digestInto(buf: Uint8Array) {
         if (this.bufLen > 0) {
             this.buffer.fill(0, this.bufLen);
             this.iteration(this.buffer, this.h, this.statePtr);
             this.incrementLenBytes(this.bufLen);
         }
         
-        const result = new Uint8Array(this.BLOCK_LEN);
+        const result = new Uint8Array(this.blockLen);
         this.sigma2(this.lenState, this.h, result);
-        return result;
+        buf.set(result);
+        
+        return buf;
     }
+
+    /** Finalize hash computation and return result as Uint8Array */
+    public digest(): Uint8Array { return this.digestInto(new Uint8Array(this.outputLen)); }
 }
 
 /** Compute hash with BelT hash algorithm */
