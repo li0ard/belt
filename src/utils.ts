@@ -1,4 +1,4 @@
-import { bytesToHex, hexToNumber, numberToBytesBE } from "@li0ard/gost3413/dist/utils";
+import { bytesToHex, hexToNumber, numberToBytesBE } from "@li0ard/gost3413/dist/utils.js";
 
 export const bytesToNumberLE = (bytes: Uint8Array): bigint => hexToNumber(bytesToHex(bytes.slice().reverse()));
 export const numberToBytesLE = (n: bigint | number, len: number): Uint8Array => numberToBytesBE(n, len).reverse();
@@ -17,7 +17,7 @@ export const incrementCounterAt = (ctr: Uint8Array, pos: number) => {
 
 export const mulC = (block: Uint32Array) => {
     const msb = block[3] >>> 31;
-    let t = (~((msb - 1) >>> 0) & 0x00000087) >>> 0;
+    const t = (~((msb - 1) >>> 0) & 0x00000087) >>> 0;
     
     block[3] = ((block[3] << 1) ^ (block[2] >>> 31)) >>> 0;
     block[2] = ((block[2] << 1) ^ (block[1] >>> 31)) >>> 0;

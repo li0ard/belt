@@ -1,8 +1,8 @@
-import { concatBytes, xor } from "@li0ard/gost3413/dist/utils";
-import { H } from "../const";
-import { Belt, ctr } from "../index";
+import { concatBytes, xor } from "@li0ard/gost3413/dist/utils.js";
+import { BLOCK_SIZE, H } from "../const.js";
+import { Belt, ctr } from "../index.js";
 import { pad1 } from "@li0ard/gost3413";
-import { equalBytes, numberToBytesLE, gf2mMul, mulC } from "../utils";
+import { equalBytes, numberToBytesLE, gf2mMul, mulC } from "../utils.js";
 
 /**
  * Encrypts data using the Datawrap (DWP) mode
@@ -14,28 +14,28 @@ import { equalBytes, numberToBytesLE, gf2mMul, mulC } from "../utils";
 export const encryptDWP = (key: Uint8Array, data: Uint8Array, iv: Uint8Array, ad: Uint8Array): Uint8Array => {
     const cipher = new Belt(key);
     const r = cipher.encrypt(cipher.encrypt(iv));
-    let t: Uint8Array = new Uint8Array(H.slice(0, 16));
+    let t: Uint8Array = new Uint8Array(H.slice(0, BLOCK_SIZE));
 
-    for (let i = 0; i < ad.length; i += 16) {
-        const blockLen = Math.min(16, ad.length - i);
+    for (let i = 0; i < ad.length; i += BLOCK_SIZE) {
+        const blockLen = Math.min(BLOCK_SIZE, ad.length - i);
         const Ii = ad.slice(i, i + blockLen);
 
-        t = xor(t, pad1(Ii, 16));
+        t = xor(t, pad1(Ii, BLOCK_SIZE));
         t = gf2mMul(t, r);
     }
-      
+
     const Y = ctr(key, data, iv);
       
-    for (let i = 0; i < Y.length; i += 16) {
-        const blockLen = Math.min(16, Y.length - i);
+    for (let i = 0; i < Y.length; i += BLOCK_SIZE) {
+        const blockLen = Math.min(BLOCK_SIZE, Y.length - i);
         const Yi = Y.slice(i, i + blockLen);
-        
-        t = xor(t, pad1(Yi, 16));
+
+        t = xor(t, pad1(Yi, BLOCK_SIZE));
         t = gf2mMul(t, r);
     }
 
     const lenBlock = concatBytes(numberToBytesLE(ad.length * 8, 8), numberToBytesLE(data.length * 8, 8));
-    
+
     t = xor(t, lenBlock);
     t = gf2mMul(t, r);
     t = cipher.encrypt(t).slice(0, 8);
@@ -53,30 +53,30 @@ export const encryptDWP = (key: Uint8Array, data: Uint8Array, iv: Uint8Array, ad
 export const decryptDWP = (key: Uint8Array, data: Uint8Array, iv: Uint8Array, ad: Uint8Array): Uint8Array => {
     const cipher = new Belt(key);
     const r = cipher.encrypt(cipher.encrypt(iv));
-    let t: Uint8Array = new Uint8Array(H.slice(0, 16));
+    let t: Uint8Array = new Uint8Array(H.slice(0, BLOCK_SIZE));
 
-    for (let i = 0; i < ad.length; i += 16) {
-        const blockLen = Math.min(16, ad.length - i);
+    for (let i = 0; i < ad.length; i += BLOCK_SIZE) {
+        const blockLen = Math.min(BLOCK_SIZE, ad.length - i);
         const Ii = ad.slice(i, i + blockLen);
 
-        t = xor(t, pad1(Ii, 16));
+        t = xor(t, pad1(Ii, BLOCK_SIZE));
         t = gf2mMul(t, r);
     }
 
     const ct = data.slice(0, -8);
     const tC = data.slice(-8);
     const Y = ctr(key, ct, iv);
-      
-    for (let i = 0; i < ct.length; i += 16) {
-        const blockLen = Math.min(16, ct.length - i);
+
+    for (let i = 0; i < ct.length; i += BLOCK_SIZE) {
+        const blockLen = Math.min(BLOCK_SIZE, ct.length - i);
         const Yi = ct.slice(i, i + blockLen);
         
-        t = xor(t, pad1(Yi, 16));
+        t = xor(t, pad1(Yi, BLOCK_SIZE));
         t = gf2mMul(t, r);
     }
 
     const lenBlock = concatBytes(numberToBytesLE(ad.length * 8, 8), numberToBytesLE(ct.length * 8, 8));
-    
+
     t = xor(t, lenBlock);
     t = gf2mMul(t, r);
     t = cipher.encrypt(t).slice(0, 8);
@@ -91,8 +91,8 @@ const ctr2 = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): Uint8Array => 
     if (iv.length !== cipher.blockLen) throw new Error("Invalid IV size");
 
     const keystreamBlocks: Uint8Array[] = [];
-    let ctr = cipher.encrypt(iv);
-    let ctr32 = new Uint32Array(ctr.buffer);
+    const ctr = cipher.encrypt(iv);
+    const ctr32 = new Uint32Array(ctr.buffer);
 
     for (let i = 0; i < Math.ceil(data.length / cipher.blockLen); i++) {
         // s ← (s*C) ^ 0x01
@@ -114,23 +114,23 @@ const ctr2 = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): Uint8Array => 
 export const encryptCHE = (key: Uint8Array, data: Uint8Array, iv: Uint8Array, ad: Uint8Array): Uint8Array => {
     const cipher = new Belt(key);
     const r = cipher.encrypt(iv);
-    let t: Uint8Array = new Uint8Array(H.slice(0, 16));
+    let t: Uint8Array = new Uint8Array(H.slice(0, BLOCK_SIZE));
 
-    for (let i = 0; i < ad.length; i += 16) {
-        const blockLen = Math.min(16, ad.length - i);
+    for (let i = 0; i < ad.length; i += BLOCK_SIZE) {
+        const blockLen = Math.min(BLOCK_SIZE, ad.length - i);
         const Ii = ad.slice(i, i + blockLen);
 
-        t = xor(t, pad1(Ii, 16));
+        t = xor(t, pad1(Ii, BLOCK_SIZE));
         t = gf2mMul(t, r);
     }
-      
+
     const Y = ctr2(key, data, iv);
-      
-    for (let i = 0; i < Y.length; i += 16) {
-        const blockLen = Math.min(16, Y.length - i);
+
+    for (let i = 0; i < Y.length; i += BLOCK_SIZE) {
+        const blockLen = Math.min(BLOCK_SIZE, Y.length - i);
         const Yi = Y.slice(i, i + blockLen);
-        
-        t = xor(t, pad1(Yi, 16));
+
+        t = xor(t, pad1(Yi, BLOCK_SIZE));
         t = gf2mMul(t, r);
     }
 
@@ -152,30 +152,30 @@ export const encryptCHE = (key: Uint8Array, data: Uint8Array, iv: Uint8Array, ad
 export const decryptCHE = (key: Uint8Array, data: Uint8Array, iv: Uint8Array, ad: Uint8Array): Uint8Array => {
     const cipher = new Belt(key);
     const r = cipher.encrypt(iv);
-    let t: Uint8Array = new Uint8Array(H.slice(0, 16));
+    let t: Uint8Array = new Uint8Array(H.slice(0, BLOCK_SIZE));
 
-    for (let i = 0; i < ad.length; i += 16) {
-        const blockLen = Math.min(16, ad.length - i);
+    for (let i = 0; i < ad.length; i += BLOCK_SIZE) {
+        const blockLen = Math.min(BLOCK_SIZE, ad.length - i);
         const Ii = ad.slice(i, i + blockLen);
 
-        t = xor(t, pad1(Ii, 16));
+        t = xor(t, pad1(Ii, BLOCK_SIZE));
         t = gf2mMul(t, r);
     }
 
     const ct = data.slice(0, -8);
     const tC = data.slice(-8);
     const Y = ctr2(key, ct, iv);
-      
-    for (let i = 0; i < ct.length; i += 16) {
-        const blockLen = Math.min(16, ct.length - i);
+
+    for (let i = 0; i < ct.length; i += BLOCK_SIZE) {
+        const blockLen = Math.min(BLOCK_SIZE, ct.length - i);
         const Yi = ct.slice(i, i + blockLen);
-        
-        t = xor(t, pad1(Yi, 16));
+
+        t = xor(t, pad1(Yi, BLOCK_SIZE));
         t = gf2mMul(t, r);
     }
 
     const lenBlock = concatBytes(numberToBytesLE(ad.length * 8, 8), numberToBytesLE(ct.length * 8, 8));
-    
+
     t = xor(t, lenBlock);
     t = gf2mMul(t, r);
     t = cipher.encrypt(t).slice(0, 8);

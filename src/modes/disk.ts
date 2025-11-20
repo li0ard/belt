@@ -1,6 +1,7 @@
-import { concatBytes, xor } from "@li0ard/gost3413/dist/utils";
-import { Belt, decryptWBL, encryptWBL } from "../index";
-import { mulC } from "../utils";
+import { concatBytes, xor } from "@li0ard/gost3413/dist/utils.js";
+import { Belt, decryptWBL, encryptWBL } from "../index.js";
+import { mulC } from "../utils.js";
+import { BLOCK_SIZE } from "../const.js";
 
 /**
  * Encrypts data using the Blockwise disk encryption (BDE) mode
@@ -15,9 +16,9 @@ export const encryptBDE = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): U
     let s32 = new Uint32Array(s.buffer, s.byteOffset);
 
     const result: Uint8Array[] = []
-    for(let i = 0; i < data.length; i += 16) {
+    for(let i = 0; i < data.length; i += BLOCK_SIZE) {
         mulC(s32);
-        result.push(xor(cipher.encrypt(xor(data.slice(i, i + 16), s)), s));
+        result.push(xor(cipher.encrypt(xor(data.slice(i, i + BLOCK_SIZE), s)), s));
     }
 
     return concatBytes(...result);
@@ -36,9 +37,9 @@ export const decryptBDE = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): U
     let s32 = new Uint32Array(s.buffer, s.byteOffset);
 
     const result: Uint8Array[] = []
-    for(let i = 0; i < data.length; i += 16) {
+    for(let i = 0; i < data.length; i += BLOCK_SIZE) {
         mulC(s32);
-        result.push(xor(cipher.decrypt(xor(data.slice(i, i + 16), s)), s));
+        result.push(xor(cipher.decrypt(xor(data.slice(i, i + BLOCK_SIZE), s)), s));
     }
 
     return concatBytes(...result);
@@ -53,13 +54,12 @@ export const decryptBDE = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): U
 export const encryptSDE = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): Uint8Array => {
     const cipher = new Belt(key);
     const s = cipher.encrypt(iv);
-    
     const result = new Uint8Array(data);
     result.set(xor(result, s));
-    
+
     const encrypted = encryptWBL(key, result);
     encrypted.set(xor(encrypted, s));
-    
+
     return encrypted;
 }
 
@@ -72,12 +72,11 @@ export const encryptSDE = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): U
 export const decryptSDE = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): Uint8Array => {
     const cipher = new Belt(key);
     const s = cipher.encrypt(iv);
-    
     const result = new Uint8Array(data);
     result.set(xor(result, s));
-    
+
     const encrypted = decryptWBL(key, result);
     encrypted.set(xor(encrypted, s));
-    
+
     return encrypted;
 }

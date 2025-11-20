@@ -1,6 +1,6 @@
-import { _HMAC } from "@noble/hashes/hmac";
-import { createHasher, type Hash } from "@noble/hashes/utils";
-import { BeltHash } from "../index";
+import { _HMAC } from "@noble/hashes/hmac.js";
+import { createHasher, type Hash } from "@noble/hashes/utils.js";
+import { BeltHash } from "../index.js";
 
 /**
  * HMAC implementation for BelT hash

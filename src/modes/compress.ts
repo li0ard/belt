@@ -1,5 +1,5 @@
-import { concatBytes, xor } from "@li0ard/gost3413/dist/utils";
-import { Belt } from "../index";
+import { concatBytes, xor } from "@li0ard/gost3413/dist/utils.js";
+import { Belt } from "../index.js";
 
 const notBlock = (block: Uint8Array): Uint8Array => {
     const result = new Uint8Array(block.length);

@@ -1,5 +1,5 @@
-import { Belt } from "../index";
-import { H } from "../const";
+import { Belt } from "../index.js";
+import { BLOCK_SIZE, H } from "../const.js";
 
 /** BelT hash mode */
 export class BeltHash {
@@ -24,7 +24,6 @@ export class BeltHash {
         let lenPtr = this.lenState.subarray(0, 16);
         this.statePtr = this.lenState.subarray(16, 32);
         this.lenView = new DataView(lenPtr.buffer, lenPtr.byteOffset, 16);
-        
         this.buffer = new Uint8Array(this.outputLen);
         this.h = new Uint8Array(H.slice(0, 32));
         this.bufLen = 0;
@@ -47,50 +46,49 @@ export class BeltHash {
     }
     /** Clone hash instance */
     public clone(): BeltHash { return this._cloneInto(); }
-    
+
     private sigma1(u12: Uint8Array, u34: Uint8Array, result: Uint8Array): void {
         const u3u4 = new Uint8Array(this.blockLen);
-        
+
         for (let i = 0; i < 8; i++) {
             u3u4[i] = u34[i] ^ u34[i + 16];
             u3u4[i + 8] = u34[i + 8] ^ u34[i + 24];
         }
-        
+
         this.beltEncrypt(u12, u3u4, result);
-        for (let i = 0; i < 16; i++) result[i] ^= u3u4[i];
+        for (let i = 0; i < BLOCK_SIZE; i++) result[i] ^= u3u4[i];
     }
 
     private sigma1Xor(x: Uint8Array, h: Uint8Array, state: Uint8Array): void {
         const u3u4 = new Uint8Array(this.blockLen);
         const tmp = new Uint8Array(this.blockLen);
-        
+
         for (let i = 0; i < 8; i++) {
             u3u4[i] = h[i] ^ h[i + 16];
             u3u4[i + 8] = h[i + 8] ^ h[i + 24];
         }
-        
+
         this.beltEncrypt(x, u3u4, tmp);
-        for (let i = 0; i < 16; i++) state[i] ^= tmp[i] ^ u3u4[i];
+        for (let i = 0; i < BLOCK_SIZE; i++) state[i] ^= tmp[i] ^ u3u4[i];
     }
 
     private sigma2(x: Uint8Array, h: Uint8Array, result: Uint8Array): void {
         const teta = new Uint8Array(this.blockLen);
-        const savedH = new Uint8Array(16);
-        savedH.set(h.subarray(0, 16));
-        
+        const savedH = new Uint8Array(h.subarray(0, 16));
+
         this.sigma1(x, h, teta);
         teta.set(h.subarray(16, 24), 16);
         teta.set(h.subarray(24, 32), 24);
-        
+
         this.beltEncrypt(teta, x, result);
-        for (let i = 0; i < 16; i++) result[i] ^= x[i];
-        for (let i = 0; i < 16; i++) teta[i] ^= 0xFF;
-        
+        for (let i = 0; i < BLOCK_SIZE; i++) result[i] ^= x[i];
+        for (let i = 0; i < BLOCK_SIZE; i++) teta[i] ^= 0xFF;
+
         teta.set(savedH.subarray(0, 8), 16);
         teta.set(savedH.subarray(8, 16), 24);
-        
-        this.beltEncrypt(teta, x.subarray(16), result.subarray(16));
-        for (let i = 0; i < 16; i++) result[i + 16] ^= x[i + 16];
+
+        this.beltEncrypt(teta, x.subarray(BLOCK_SIZE), result.subarray(BLOCK_SIZE));
+        for (let i = 0; i < BLOCK_SIZE; i++) result[i + 16] ^= x[i + 16];
     }
 
     private iteration(x: Uint8Array, h: Uint8Array, s: Uint8Array): void {
@@ -101,10 +99,9 @@ export class BeltHash {
     private incrementLenBlock(): void {
         const low = this.lenView.getBigUint64(0, true);
         const high = this.lenView.getBigUint64(8, true);
-        
         const blockBits = BigInt(this.outputLen * 8); // 256 bits
         const newLow = low + blockBits;
-        
+
         if (newLow < low) this.lenView.setBigUint64(8, high + 1n, true);
         this.lenView.setBigUint64(0, newLow, true);
     }
@@ -112,10 +109,9 @@ export class BeltHash {
     private incrementLenBytes(bytes: number): void {
         const low = this.lenView.getBigUint64(0, true);
         const high = this.lenView.getBigUint64(8, true);
-        
         const bits = BigInt(bytes) * 8n;
         const newLow = low + bits;
-        
+
         if (newLow < low) this.lenView.setBigUint64(8, high + 1n, true);
         this.lenView.setBigUint64(0, newLow, true);
     }
@@ -123,7 +119,6 @@ export class BeltHash {
     private beltEncrypt(key: Uint8Array, data: Uint8Array, output: Uint8Array) {
         const alignedData = new Uint8Array(data.length);
         alignedData.set(data);
-    
         output.set(new Belt(key).encrypt(alignedData));
     }
 
@@ -131,19 +126,17 @@ export class BeltHash {
     update(data: Uint8Array): this {
         let offset = 0;
         const len = data.length;
-        
+
         if (this.bufLen > 0) {
             const remaining = this.outputLen - this.bufLen;
-            
             if (len < remaining) {
                 this.buffer.set(data, this.bufLen);
                 this.bufLen += len;
                 return this;
             }
-            
+
             this.buffer.set(data.subarray(0, remaining), this.bufLen);
             offset += remaining;
-            
             this.incrementLenBlock();
             this.iteration(this.buffer, this.h, this.statePtr);
             this.bufLen = 0;
@@ -155,13 +148,13 @@ export class BeltHash {
             this.iteration(data.subarray(offset, offset + this.outputLen), this.h, this.statePtr);
             offset += this.outputLen;
         }
-        
+
         if (offset < len) {
             const remainingBytes = len - offset;
             this.buffer.set(data.subarray(offset, offset + remainingBytes));
             this.bufLen = remainingBytes;
         }
-        
+
         return this;
     }
 
@@ -175,7 +168,7 @@ export class BeltHash {
             this.iteration(this.buffer, this.h, this.statePtr);
             this.incrementLenBytes(this.bufLen);
         }
-        
+
         const result = new Uint8Array(this.blockLen);
         this.sigma2(this.lenState, this.h, result);
         buf.set(result);

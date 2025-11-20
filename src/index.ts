@@ -1,6 +1,6 @@
-import { concatBytes } from "@li0ard/gost3413/dist/utils";
-import { H, keyIndex } from "./const";
-import { compress } from "./modes/compress";
+import { concatBytes } from "@li0ard/gost3413/dist/utils.js";
+import { BLOCK_SIZE, H, keyIndex } from "./const.js";
+import { compress } from "./modes/compress.js";
 
 const RotHi = (x: number, r: number): number => (x << r) | (x >>> (32 - r));
 const G = (x: number, r: number): number => RotHi((H[x & 0xff]) | (H[(x >>> 8) & 0xff] << 8) | (H[(x >>> 16) & 0xff] << 16) | (H[x >>> 24] << 24), r);
@@ -11,7 +11,7 @@ const G = (x: number, r: number): number => RotHi((H[x & 0xff]) | (H[(x >>> 8) &
  */
 export const keyExpand = (key: Uint8Array): Uint8Array => {
     if(key.length < 16 || key.length > 32) throw new Error("Invalid key length");
-    let ks = new Uint8Array(32);
+    const ks = new Uint8Array(32);
     ks.set(key);
     if(key.length == 16) ks.set(key, 16);
     else if(key.length == 24) {
@@ -40,7 +40,7 @@ export const keyTransform = (key: Uint8Array, level: Uint8Array, iv: Uint8Array,
 
 /** BelT core class */
 export class Belt {
-    public readonly blockLen = 16;
+    public readonly blockLen = BLOCK_SIZE;
     private ks: Uint8Array;
 
     /**
@@ -51,25 +51,24 @@ export class Belt {
 
     /** Encrypt block */
     encrypt(data: Uint8Array): Uint8Array {
-        let inBlock = new Uint32Array(data.buffer, data.byteOffset);
+        const inBlock = new Uint32Array(data.buffer, data.byteOffset);
         let a = inBlock[0];
         let b = inBlock[1];
         let c = inBlock[2];
         let d = inBlock[3];
         let e: number;
-
-        let key = new Uint32Array(this.ks.buffer, this.ks.byteOffset);
-        let outBlock = new Uint32Array(4);
+        const key = new Uint32Array(this.ks.buffer, this.ks.byteOffset);
+        const outBlock = new Uint32Array(4);
         for(let i = 0; i<8; ++i) {
             b ^= G((a + key[keyIndex[i][0]]), 5) >>> 0;
             c ^= G((d + key[keyIndex[i][1]]), 21) >>> 0;
             a = (a - G((b + key[keyIndex[i][2]]), 13)) >>> 0;
             e = (G((b + c + key[keyIndex[i][3]]), 21) ^ (i + 1)) >>> 0;
             b += e;
-		    c = (c - e);
-		    d += G((c + key[keyIndex[i][4]]), 13) >>> 0;
-		    b ^= G((a + key[keyIndex[i][5]]), 21) >>> 0;
-		    c ^= G((d + key[keyIndex[i][6]]), 5) >>> 0;
+            c = (c - e);
+            d += G((c + key[keyIndex[i][4]]), 13) >>> 0;
+            b ^= G((a + key[keyIndex[i][5]]), 21) >>> 0;
+            c ^= G((d + key[keyIndex[i][6]]), 5) >>> 0;
 
             let tmp = a;
             a = b;
@@ -84,34 +83,33 @@ export class Belt {
             c = tmp;
         }
         outBlock[0] = b;
-	    outBlock[1] = d;
-	    outBlock[2] = a;
-	    outBlock[3] = c;
+        outBlock[1] = d;
+        outBlock[2] = a;
+        outBlock[3] = c;
 
         return new Uint8Array(outBlock.buffer, outBlock.byteOffset);
     }
 
     /** Decrypt block */
     decrypt(data: Uint8Array): Uint8Array {
-        let inBlock = new Uint32Array(data.buffer, data.byteOffset);
+        const inBlock = new Uint32Array(data.buffer, data.byteOffset);
         let a = inBlock[0];
         let b = inBlock[1];
         let c = inBlock[2];
         let d = inBlock[3];
         let e: number;
-
-        let key = new Uint32Array(this.ks.buffer, this.ks.byteOffset);
-        let outBlock = new Uint32Array(4);
+        const key = new Uint32Array(this.ks.buffer, this.ks.byteOffset);
+        const outBlock = new Uint32Array(4);
         for(let i = 7; i >= 0; --i) {
             b ^= G((a + key[keyIndex[i][6]]), 5) >>> 0;
-		    c ^= G((d + key[keyIndex[i][5]]), 21) >>> 0;
-		    a = (a - G((b + key[keyIndex[i][4]]), 13)) >>> 0;
-		    e = (G((b + c + key[keyIndex[i][3]]), 21) ^ (i + 1)) >>> 0;
-		    b += e;
-		    c = (c - e);
-		    d += G((c + key[keyIndex[i][2]]), 13) >>> 0;
-		    b ^= G((a + key[keyIndex[i][1]]), 21) >>> 0;
-		    c ^= G((d + key[keyIndex[i][0]]), 5) >>> 0;
+            c ^= G((d + key[keyIndex[i][5]]), 21) >>> 0;
+            a = (a - G((b + key[keyIndex[i][4]]), 13)) >>> 0;
+            e = (G((b + c + key[keyIndex[i][3]]), 21) ^ (i + 1)) >>> 0;
+            b += e;
+            c = (c - e);
+            d += G((c + key[keyIndex[i][2]]), 13) >>> 0;
+            b ^= G((a + key[keyIndex[i][1]]), 21) >>> 0;
+            c ^= G((d + key[keyIndex[i][0]]), 5) >>> 0;
 
             let tmp = a;
             a = b;
@@ -127,23 +125,23 @@ export class Belt {
         }
 
         outBlock[0] = c;
-	    outBlock[1] = a;
-	    outBlock[2] = d;
-	    outBlock[3] = b;
+        outBlock[1] = a;
+        outBlock[2] = d;
+        outBlock[3] = b;
 
         return new Uint8Array(outBlock.buffer, outBlock.byteOffset);
     }
 }
 
-export * from "./modes/aead";
-export * from "./modes/cbc";
-export * from "./modes/cfb";
-export * from "./modes/compress";
-export * from "./modes/ctr";
-export * from "./modes/disk";
-export * from "./modes/ecb";
-export * from "./modes/hash";
-export * from "./modes/hmac";
-export * from "./modes/kwp";
-export * from "./modes/mac";
-export * from "./modes/wbl";
+export * from "./modes/aead.js";
+export * from "./modes/cbc.js";
+export * from "./modes/cfb.js";
+export * from "./modes/compress.js";
+export * from "./modes/ctr.js";
+export * from "./modes/disk.js";
+export * from "./modes/ecb.js";
+export * from "./modes/hash.js";
+export * from "./modes/hmac.js";
+export * from "./modes/kwp.js";
+export * from "./modes/mac.js";
+export * from "./modes/wbl.js";

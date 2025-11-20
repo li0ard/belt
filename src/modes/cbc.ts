@@ -1,5 +1,5 @@
 import { cbc_encrypt, cbc_decrypt } from "@li0ard/gost3413";
-import { Belt } from "../index";
+import { Belt } from "../index.js";
 
 /**
  * Encrypts data using the Cipher Block Chaining (CBC) mode
@@ -9,9 +9,7 @@ import { Belt } from "../index";
  */
 export const encryptCBC = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): Uint8Array => {
     const cipher = new Belt(key);
-    const encrypter = (buf: Uint8Array) => (cipher.encrypt(buf));
-    
-    return cbc_encrypt(encrypter, cipher.blockLen, data, iv);
+    return cbc_encrypt(cipher.encrypt.bind(cipher), cipher.blockLen, data, iv);
 }
 
 /**
@@ -22,7 +20,5 @@ export const encryptCBC = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): U
  */
 export const decryptCBC = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): Uint8Array => {
     const cipher = new Belt(key);
-    const decrypter = (buf: Uint8Array) => (cipher.decrypt(buf));
-
-    return cbc_decrypt(decrypter, cipher.blockLen, data, iv);
+    return cbc_decrypt(cipher.decrypt.bind(cipher), cipher.blockLen, data, iv);
 }

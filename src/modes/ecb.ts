@@ -1,5 +1,5 @@
 import { ecb_encrypt, ecb_decrypt } from "@li0ard/gost3413";
-import { Belt } from "../index";
+import { Belt } from "../index.js";
 
 /**
  * Encrypts data using Electronic Codebook (ECB) mode
@@ -8,9 +8,7 @@ import { Belt } from "../index";
  */
 export const encryptECB = (key: Uint8Array, data: Uint8Array): Uint8Array => {
     const cipher = new Belt(key);
-    const encrypter = (buf: Uint8Array) => (cipher.encrypt(buf));
-
-    return ecb_encrypt(encrypter, cipher.blockLen, data);
+    return ecb_encrypt(cipher.encrypt.bind(cipher), cipher.blockLen, data);
 }
 
 /**
@@ -20,7 +18,5 @@ export const encryptECB = (key: Uint8Array, data: Uint8Array): Uint8Array => {
  */
 export const decryptECB = (key: Uint8Array, data: Uint8Array): Uint8Array => {
     const cipher = new Belt(key);
-    const decrypter = (buf: Uint8Array) => (cipher.decrypt(buf));
-
-    return ecb_decrypt(decrypter, cipher.blockLen, data);
+    return ecb_decrypt(cipher.decrypt.bind(cipher), cipher.blockLen, data);
 }

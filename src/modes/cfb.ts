@@ -1,5 +1,5 @@
-import { concatBytes, xor } from "@li0ard/gost3413/dist/utils";
-import { Belt } from "../index";
+import { concatBytes, xor } from "@li0ard/gost3413/dist/utils.js";
+import { Belt } from "../index.js";
 import { getPadLength } from "@li0ard/gost3413";
 
 /**
@@ -11,7 +11,7 @@ import { getPadLength } from "@li0ard/gost3413";
 export const encryptCFB = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): Uint8Array => {
     const cipher = new Belt(key);
     if (iv.length == 0 || iv.length % cipher.blockLen !== 0) throw new Error("Invalid IV size");
-    
+
     let r: Uint8Array[] = [];
     for (let i = 0; i < iv.length; i += cipher.blockLen) r.push(iv.slice(i, i + cipher.blockLen));
 
@@ -33,7 +33,7 @@ export const encryptCFB = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): U
 export const decryptCFB = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): Uint8Array => {
     const cipher = new Belt(key);
     if (iv.length == 0 || iv.length % cipher.blockLen !== 0) throw new Error("Invalid IV size");
-    
+
     let r: Uint8Array[] = [];
     for (let i = 0; i < iv.length; i += cipher.blockLen) r.push(iv.slice(i, i + cipher.blockLen));
 
