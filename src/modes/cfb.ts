@@ -1,6 +1,6 @@
-import { concatBytes, xor } from "@li0ard/gost3413/dist/utils.js";
 import { Belt } from "../index.js";
-import { getPadLength } from "@li0ard/gost3413";
+import { getPadLength, xor } from "@li0ard/gost3413";
+import { concatBytes, type TArg, type TRet } from "@noble/hashes/utils.js";
 
 /**
  * Encrypts data using the Cipher Feedback (CFB) mode
@@ -8,7 +8,11 @@ import { getPadLength } from "@li0ard/gost3413";
  * @param data Data to be encrypted
  * @param iv Initialization vector
  */
-export const encryptCFB = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): Uint8Array => {
+export const encryptCFB = (
+    key: TArg<Uint8Array>,
+    data: TArg<Uint8Array>,
+    iv: TArg<Uint8Array>
+): TRet<Uint8Array> => {
     const cipher = new Belt(key);
     if (iv.length == 0 || iv.length % cipher.blockLen !== 0) throw new Error("Invalid IV size");
 
@@ -30,7 +34,11 @@ export const encryptCFB = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): U
  * @param data Data to be decrypted
  * @param iv Initialization vector
  */
-export const decryptCFB = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): Uint8Array => {
+export const decryptCFB = (
+    key: TArg<Uint8Array>,
+    data: TArg<Uint8Array>,
+    iv: TArg<Uint8Array>
+): TRet<Uint8Array> => {
     const cipher = new Belt(key);
     if (iv.length == 0 || iv.length % cipher.blockLen !== 0) throw new Error("Invalid IV size");
 

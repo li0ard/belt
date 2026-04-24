@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import { mac } from "../src";
-import { hexToBytes } from "@li0ard/gost3413/dist/utils";
+import { hexToBytes } from "@noble/hashes/utils.js";
 
 describe("MAC", () => {
     const key = hexToBytes("E9DEE72C8F0C0FA62DDB49F46F73964706075316ED247A3739CBA38303A98BF6");
@@ -9,11 +9,11 @@ describe("MAC", () => {
         const ct = hexToBytes("7260DA60138F96C9");
     
         expect(mac(key, pt.slice(0, 13))).toStrictEqual(ct);
-    })
+    });
 
     test("#2", () => {
         const ct = hexToBytes("2DAB59771B4B16D0");
     
         expect(mac(key, pt)).toStrictEqual(ct);
-    })
-})
+    });
+});

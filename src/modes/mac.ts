@@ -1,8 +1,9 @@
-import { xor } from "@li0ard/gost3413/dist/utils.js";
+import { xor } from "@li0ard/gost3413";
 import { Belt } from "../index.js";
 import { BLOCK_SIZE } from "../const.js";
+import type { TArg, TRet } from "@noble/hashes/utils.js";
 
-const phi1 = (u: Uint8Array): Uint8Array => {
+const phi1 = (u: TArg<Uint8Array>): TRet<Uint8Array> => {
     const result = new Uint8Array(BLOCK_SIZE);
 
     result.set(u.subarray(4, 8), 0);
@@ -14,7 +15,7 @@ const phi1 = (u: Uint8Array): Uint8Array => {
     return result;
 }
 
-const phi2 = (u: Uint8Array): Uint8Array => {
+const phi2 = (u: TArg<Uint8Array>): TRet<Uint8Array> => {
     const result = new Uint8Array(BLOCK_SIZE);
     for (let i = 0; i < 4; i++) result[i] = u[i] ^ u[12 + i];
 
@@ -25,7 +26,7 @@ const phi2 = (u: Uint8Array): Uint8Array => {
     return result;
 }
 
-const psi = (u: Uint8Array): Uint8Array => {
+const psi = (u: TArg<Uint8Array>): TRet<Uint8Array> => {
     const result = new Uint8Array(BLOCK_SIZE);
     result.set(u);
     result[u.length] = 0x80;
@@ -39,7 +40,11 @@ const psi = (u: Uint8Array): Uint8Array => {
  * @param data Data to be authenticated
  * @param length MAC length
  */
-export const mac = (key: Uint8Array, data: Uint8Array, length: number = 8): Uint8Array => {
+export const mac = (
+    key: TArg<Uint8Array>,
+    data: TArg<Uint8Array>,
+    length: number = 8
+): TRet<Uint8Array> => {
     if(length > 8 || length <= 0) throw new Error("MAC length must be between 1 and 8 bytes (64 bits)");
     let s: Uint8Array = new Uint8Array(BLOCK_SIZE);
     const cipher = new Belt(key);

@@ -1,7 +1,8 @@
-import { concatBytes, xor } from "@li0ard/gost3413/dist/utils.js";
+import { xor } from "@li0ard/gost3413/dist/utils.js";
 import { Belt } from "../index.js";
+import { concatBytes, type TArg, type TRet } from "@noble/hashes/utils.js";
 
-const notBlock = (block: Uint8Array): Uint8Array => {
+const notBlock = (block: TArg<Uint8Array>): TRet<Uint8Array> => {
     const result = new Uint8Array(block.length);
     for (let i = 0; i < block.length; i++) result[i] = ~block[i] & 0xFF;
     return result;
@@ -11,7 +12,7 @@ const notBlock = (block: Uint8Array): Uint8Array => {
  * Compress data
  * @param X Data to be compressed
  */
-export const compress = (X: Uint8Array): Uint8Array[] => {
+export const compress = (X: TArg<Uint8Array>): TRet<Uint8Array>[] => {
     if (X.length !== 64) throw new Error("Input must be exactly 64 bytes (512 bits) long");
 
     const X1 = X.subarray(0, 16);

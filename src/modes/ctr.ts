@@ -1,6 +1,7 @@
-import { concatBytes, xor } from "@li0ard/gost3413/dist/utils.js";
+import { xor } from "@li0ard/gost3413";
 import { Belt } from "../index.js";
 import { incrementCounterAt } from "../utils.js";
+import { concatBytes, type TArg, type TRet } from "@noble/hashes/utils.js";
 
 /**
  * Proceed data using the Counter (CTR) mode
@@ -8,7 +9,7 @@ import { incrementCounterAt } from "../utils.js";
  * @param data Data to be encrypted/decrypted
  * @param iv Initialization vector
  */
-export const ctr = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): Uint8Array => {
+export const ctr = (key: TArg<Uint8Array>, data: TArg<Uint8Array>, iv: TArg<Uint8Array>): TRet<Uint8Array> => {
     const cipher = new Belt(key);
     if (iv.length !== cipher.blockLen) throw new Error("Invalid IV size");
 

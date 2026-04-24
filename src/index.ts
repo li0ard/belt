@@ -1,15 +1,18 @@
-import { concatBytes } from "@li0ard/gost3413/dist/utils.js";
+import { concatBytes, rotl, type TArg, type TRet } from "@noble/hashes/utils.js";
 import { BLOCK_SIZE, H, keyIndex } from "./const.js";
 import { compress } from "./modes/compress.js";
 
-const RotHi = (x: number, r: number): number => (x << r) | (x >>> (32 - r));
-const G = (x: number, r: number): number => RotHi((H[x & 0xff]) | (H[(x >>> 8) & 0xff] << 8) | (H[(x >>> 16) & 0xff] << 16) | (H[x >>> 24] << 24), r);
+const G = (x: number, r: number): number => rotl(
+    (H[x & 0xff]) | (H[(x >>> 8) & 0xff] << 8) |
+    (H[(x >>> 16) & 0xff] << 16) | (H[x >>> 24] << 24),
+    r
+);
 
 /**
  * Key expand algorithm
  * @param key Encryption key
  */
-export const keyExpand = (key: Uint8Array): Uint8Array => {
+export const keyExpand = (key: TArg<Uint8Array>): TRet<Uint8Array> => {
     if(key.length < 16 || key.length > 32) throw new Error("Invalid key length");
     const ks = new Uint8Array(32);
     ks.set(key);
@@ -29,8 +32,14 @@ export const keyExpand = (key: Uint8Array): Uint8Array => {
  * @param iv Initialization vector
  * @param outputLen Output length (16/24/32)
  */
-export const keyTransform = (key: Uint8Array, level: Uint8Array, iv: Uint8Array, outputLen: number): Uint8Array => {
-    if (outputLen > key.length || ![16, 24, 32].includes(outputLen) || ![16, 24, 32].includes(key.length)) throw new Error("Invalid key lengths: m must be <= n and both must be 16, 24, or 32");
+export const keyTransform = (
+    key: TArg<Uint8Array>,
+    level: TArg<Uint8Array>,
+    iv: TArg<Uint8Array>,
+    outputLen: number
+): TRet<Uint8Array> => {
+    if (outputLen > key.length || ![16, 24, 32].includes(outputLen) || ![16, 24, 32].includes(key.length))
+        throw new Error("Invalid key lengths: m must be <= n and both must be 16, 24, or 32");
     if (level.length !== 12) throw new Error("Level must be 12 bytes");
     if (iv.length !== 16) throw new Error("IV must be 16 bytes");
     const offset = 4 * (key.length - 16) + 2 * (outputLen - 16);
@@ -47,10 +56,10 @@ export class Belt {
      * BelT algorithm class
      * @param key Encryption key
      */
-    constructor(key: Uint8Array) { this.ks = keyExpand(key); }
+    constructor(key: TArg<Uint8Array>) { this.ks = keyExpand(key); }
 
     /** Encrypt block */
-    encrypt(data: Uint8Array): Uint8Array {
+    encrypt(data: TArg<Uint8Array>): TRet<Uint8Array> {
         const inBlock = new Uint32Array(data.buffer, data.byteOffset);
         let a = inBlock[0];
         let b = inBlock[1];
@@ -91,7 +100,7 @@ export class Belt {
     }
 
     /** Decrypt block */
-    decrypt(data: Uint8Array): Uint8Array {
+    decrypt(data: TArg<Uint8Array>): TRet<Uint8Array> {
         const inBlock = new Uint32Array(data.buffer, data.byteOffset);
         let a = inBlock[0];
         let b = inBlock[1];

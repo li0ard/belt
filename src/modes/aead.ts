@@ -1,8 +1,8 @@
-import { concatBytes, xor } from "@li0ard/gost3413/dist/utils.js";
+import { numberToBytesLE, xor, equalBytes, pad1 } from "@li0ard/gost3413";
 import { BLOCK_SIZE, H } from "../const.js";
 import { Belt, ctr } from "../index.js";
-import { pad1 } from "@li0ard/gost3413";
-import { equalBytes, numberToBytesLE, gf2mMul, mulC } from "../utils.js";
+import { gf2mMul, mulC } from "../utils.js";
+import { concatBytes, type TArg, type TRet } from "@noble/hashes/utils.js";
 
 /**
  * Encrypts data using the Datawrap (DWP) mode
@@ -11,7 +11,12 @@ import { equalBytes, numberToBytesLE, gf2mMul, mulC } from "../utils.js";
  * @param iv Initialization vector
  * @param ad Data to be authenticated
  */
-export const encryptDWP = (key: Uint8Array, data: Uint8Array, iv: Uint8Array, ad: Uint8Array): Uint8Array => {
+export const encryptDWP = (
+    key: TArg<Uint8Array>,
+    data: TArg<Uint8Array>,
+    iv: TArg<Uint8Array>,
+    ad: TArg<Uint8Array>
+): TRet<Uint8Array> => {
     const cipher = new Belt(key);
     const r = cipher.encrypt(cipher.encrypt(iv));
     let t: Uint8Array = new Uint8Array(H.slice(0, BLOCK_SIZE));
@@ -50,7 +55,12 @@ export const encryptDWP = (key: Uint8Array, data: Uint8Array, iv: Uint8Array, ad
  * @param iv Initialization vector
  * @param ad Data to be authenticated
  */
-export const decryptDWP = (key: Uint8Array, data: Uint8Array, iv: Uint8Array, ad: Uint8Array): Uint8Array => {
+export const decryptDWP = (
+    key: TArg<Uint8Array>,
+    data: TArg<Uint8Array>,
+    iv: TArg<Uint8Array>,
+    ad: TArg<Uint8Array>
+): TRet<Uint8Array> => {
     const cipher = new Belt(key);
     const r = cipher.encrypt(cipher.encrypt(iv));
     let t: Uint8Array = new Uint8Array(H.slice(0, BLOCK_SIZE));
@@ -86,7 +96,7 @@ export const decryptDWP = (key: Uint8Array, data: Uint8Array, iv: Uint8Array, ad
 }
 
 /** Modified CTR */
-const ctr2 = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): Uint8Array => {
+const ctr2 = (key: TArg<Uint8Array>, data: TArg<Uint8Array>, iv: TArg<Uint8Array>): TRet<Uint8Array> => {
     const cipher = new Belt(key);
     if (iv.length !== cipher.blockLen) throw new Error("Invalid IV size");
 
@@ -111,7 +121,12 @@ const ctr2 = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): Uint8Array => 
  * @param iv Initialization vector
  * @param ad Data to be authenticated
  */
-export const encryptCHE = (key: Uint8Array, data: Uint8Array, iv: Uint8Array, ad: Uint8Array): Uint8Array => {
+export const encryptCHE = (
+    key: TArg<Uint8Array>,
+    data: TArg<Uint8Array>,
+    iv: TArg<Uint8Array>,
+    ad: TArg<Uint8Array>
+): TRet<Uint8Array> => {
     const cipher = new Belt(key);
     const r = cipher.encrypt(iv);
     let t: Uint8Array = new Uint8Array(H.slice(0, BLOCK_SIZE));
@@ -149,7 +164,12 @@ export const encryptCHE = (key: Uint8Array, data: Uint8Array, iv: Uint8Array, ad
  * @param iv Initialization vector
  * @param ad Data to be authenticated
  */
-export const decryptCHE = (key: Uint8Array, data: Uint8Array, iv: Uint8Array, ad: Uint8Array): Uint8Array => {
+export const decryptCHE = (
+    key: TArg<Uint8Array>,
+    data: TArg<Uint8Array>,
+    iv: TArg<Uint8Array>,
+    ad: TArg<Uint8Array>
+): TRet<Uint8Array> => {
     const cipher = new Belt(key);
     const r = cipher.encrypt(iv);
     let t: Uint8Array = new Uint8Array(H.slice(0, BLOCK_SIZE));

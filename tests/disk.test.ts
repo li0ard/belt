@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import { decryptBDE, decryptSDE, encryptBDE, encryptSDE } from "../src";
-import { hexToBytes } from "@li0ard/gost3413/dist/utils";
+import { hexToBytes } from "@noble/hashes/utils.js";
 
 describe("BDE", () => {
     test("#1", () => {
@@ -11,7 +11,7 @@ describe("BDE", () => {
 
         expect(encryptBDE(key, pt, iv)).toStrictEqual(ct);
         expect(decryptBDE(key, ct, iv)).toStrictEqual(pt);
-    })
+    });
 
     test("#2", () => {
         const key = hexToBytes("92BD9B1CE5D141015445FBC95E4D0EF2682080AA227D642F2687F93490405511");
@@ -21,8 +21,8 @@ describe("BDE", () => {
 
         expect(encryptBDE(key, pt, iv)).toStrictEqual(ct);
         expect(decryptBDE(key, ct, iv)).toStrictEqual(pt);
-    })
-})
+    });
+});
 
 describe("SDE", () => {
     test("#1", () => {
@@ -33,7 +33,7 @@ describe("SDE", () => {
 
         expect(encryptSDE(key, pt, iv)).toStrictEqual(ct);
         expect(decryptSDE(key, ct, iv)).toStrictEqual(pt);
-    })
+    });
 
     test("#2", () => {
         const key = hexToBytes("92BD9B1CE5D141015445FBC95E4D0EF2682080AA227D642F2687F93490405511");
@@ -43,5 +43,5 @@ describe("SDE", () => {
 
         expect(encryptSDE(key, pt, iv)).toStrictEqual(ct);
         expect(decryptSDE(key, ct, iv)).toStrictEqual(pt);
-    })
-})
+    });
+});

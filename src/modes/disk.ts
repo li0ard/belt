@@ -1,7 +1,8 @@
-import { concatBytes, xor } from "@li0ard/gost3413/dist/utils.js";
+import { xor } from "@li0ard/gost3413";
 import { Belt, decryptWBL, encryptWBL } from "../index.js";
 import { mulC } from "../utils.js";
 import { BLOCK_SIZE } from "../const.js";
+import { concatBytes, type TArg, type TRet } from "@noble/hashes/utils.js";
 
 /**
  * Encrypts data using the Blockwise disk encryption (BDE) mode
@@ -9,7 +10,11 @@ import { BLOCK_SIZE } from "../const.js";
  * @param data Data to be encrypted
  * @param iv Initialization vector
  */
-export const encryptBDE = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): Uint8Array => {
+export const encryptBDE = (
+    key: TArg<Uint8Array>,
+    data: TArg<Uint8Array>,
+    iv: TArg<Uint8Array>
+): TRet<Uint8Array> => {
     const cipher = new Belt(key);
     const eS = cipher.encrypt(iv);
     let s = new Uint8Array(eS);
@@ -30,7 +35,11 @@ export const encryptBDE = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): U
  * @param data Data to be decrypted
  * @param iv Initialization vector
  */
-export const decryptBDE = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): Uint8Array => {
+export const decryptBDE = (
+    key: TArg<Uint8Array>,
+    data: TArg<Uint8Array>,
+    iv: TArg<Uint8Array>
+): TRet<Uint8Array> => {
     const cipher = new Belt(key);
     const eS = cipher.encrypt(iv);
     let s = new Uint8Array(eS);
@@ -51,7 +60,11 @@ export const decryptBDE = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): U
  * @param data Data to be encrypted
  * @param iv Initialization vector
  */
-export const encryptSDE = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): Uint8Array => {
+export const encryptSDE = (
+    key: TArg<Uint8Array>,
+    data: TArg<Uint8Array>,
+    iv: TArg<Uint8Array>
+): TRet<Uint8Array> => {
     const cipher = new Belt(key);
     const s = cipher.encrypt(iv);
     const result = new Uint8Array(data);
@@ -69,7 +82,11 @@ export const encryptSDE = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): U
  * @param data Data to be decrypted
  * @param iv Initialization vector
  */
-export const decryptSDE = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): Uint8Array => {
+export const decryptSDE = (
+    key: TArg<Uint8Array>,
+    data: TArg<Uint8Array>,
+    iv: TArg<Uint8Array>
+): TRet<Uint8Array> => {
     const cipher = new Belt(key);
     const s = cipher.encrypt(iv);
     const result = new Uint8Array(data);

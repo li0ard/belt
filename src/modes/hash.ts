@@ -1,10 +1,12 @@
 import { Belt } from "../index.js";
 import { BLOCK_SIZE, H } from "../const.js";
+import type { Hash, TArg, TRet } from "@noble/hashes/utils.js";
 
 /** BelT hash mode */
-export class BeltHash {
+export class BeltHash implements Hash<BeltHash> {
     public readonly blockLen = 32;
     public readonly outputLen = 32;
+    public readonly canXOF = false;
 
     private lenState!: Uint8Array;
     private statePtr!: Uint8Array;
@@ -47,7 +49,7 @@ export class BeltHash {
     /** Clone hash instance */
     public clone(): BeltHash { return this._cloneInto(); }
 
-    private sigma1(u12: Uint8Array, u34: Uint8Array, result: Uint8Array): void {
+    private sigma1(u12: TArg<Uint8Array>, u34: TArg<Uint8Array>, result: TArg<Uint8Array>): void {
         const u3u4 = new Uint8Array(this.blockLen);
 
         for (let i = 0; i < 8; i++) {
@@ -59,7 +61,7 @@ export class BeltHash {
         for (let i = 0; i < BLOCK_SIZE; i++) result[i] ^= u3u4[i];
     }
 
-    private sigma1Xor(x: Uint8Array, h: Uint8Array, state: Uint8Array): void {
+    private sigma1Xor(x: TArg<Uint8Array>, h: TArg<Uint8Array>, state: TArg<Uint8Array>): void {
         const u3u4 = new Uint8Array(this.blockLen);
         const tmp = new Uint8Array(this.blockLen);
 
@@ -72,7 +74,7 @@ export class BeltHash {
         for (let i = 0; i < BLOCK_SIZE; i++) state[i] ^= tmp[i] ^ u3u4[i];
     }
 
-    private sigma2(x: Uint8Array, h: Uint8Array, result: Uint8Array): void {
+    private sigma2(x: TArg<Uint8Array>, h: TArg<Uint8Array>, result: TArg<Uint8Array>): void {
         const teta = new Uint8Array(this.blockLen);
         const savedH = new Uint8Array(h.subarray(0, 16));
 
@@ -91,7 +93,7 @@ export class BeltHash {
         for (let i = 0; i < BLOCK_SIZE; i++) result[i + 16] ^= x[i + 16];
     }
 
-    private iteration(x: Uint8Array, h: Uint8Array, s: Uint8Array): void {
+    private iteration(x: TArg<Uint8Array>, h: TArg<Uint8Array>, s: TArg<Uint8Array>): void {
         this.sigma1Xor(x, h, s);
         this.sigma2(x, h, h);
     }
@@ -116,14 +118,14 @@ export class BeltHash {
         this.lenView.setBigUint64(0, newLow, true);
     }
 
-    private beltEncrypt(key: Uint8Array, data: Uint8Array, output: Uint8Array) {
+    private beltEncrypt(key: TArg<Uint8Array>, data: TArg<Uint8Array>, output: TArg<Uint8Array>) {
         const alignedData = new Uint8Array(data.length);
         alignedData.set(data);
         output.set(new Belt(key).encrypt(alignedData));
     }
 
     /** Update hash buffer */
-    update(data: Uint8Array): this {
+    update(data: TArg<Uint8Array>): this {
         let offset = 0;
         const len = data.length;
 
@@ -162,7 +164,7 @@ export class BeltHash {
      * Finalize hash computation and write result into Uint8Array
      * @param buf - Output Uint8Array
      */
-    digestInto(buf: Uint8Array): Uint8Array {
+    digestInto(buf: TArg<Uint8Array>) {
         if (this.bufLen > 0) {
             this.buffer.fill(0, this.bufLen);
             this.iteration(this.buffer, this.h, this.statePtr);
@@ -172,13 +174,18 @@ export class BeltHash {
         const result = new Uint8Array(this.blockLen);
         this.sigma2(this.lenState, this.h, result);
         buf.set(result);
-        
-        return buf;
+        this.destroy();
     }
 
     /** Finalize hash computation and return result as Uint8Array */
-    public digest(): Uint8Array { return this.digestInto(new Uint8Array(this.outputLen)); }
+    public digest(): TRet<Uint8Array> {
+        const buffer = new Uint8Array(this.outputLen);
+        this.digestInto(buffer);
+
+        return buffer;
+    }
 }
 
 /** Compute hash with BelT hash algorithm */
-export const beltHash = (data: Uint8Array): Uint8Array => new BeltHash().update(data).digest();
+export const beltHash = (data: TArg<Uint8Array>): TRet<Uint8Array> =>
+    new BeltHash().update(data).digest();

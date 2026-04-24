@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import { ctr } from "../src";
-import { hexToBytes } from "@li0ard/gost3413/dist/utils";
+import { hexToBytes } from "@noble/hashes/utils.js";
 
 describe("CTR", () => {
     test("#1", () => {
@@ -11,7 +11,7 @@ describe("CTR", () => {
 
         expect(ctr(key, pt, iv)).toStrictEqual(ct);
         expect(ctr(key, ct, iv)).toStrictEqual(pt);
-    })
+    });
 
     test("#2", () => {
         const key = hexToBytes("92BD9B1CE5D141015445FBC95E4D0EF2682080AA227D642F2687F93490405511");
@@ -21,5 +21,5 @@ describe("CTR", () => {
 
         expect(ctr(key, pt, iv)).toStrictEqual(ct);
         expect(ctr(key, ct, iv)).toStrictEqual(pt);
-    })
-})
+    });
+});

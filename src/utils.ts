@@ -1,15 +1,3 @@
-import { bytesToHex, hexToNumber, numberToBytesBE } from "@li0ard/gost3413/dist/utils.js";
-
-export const bytesToNumberLE = (bytes: Uint8Array): bigint => hexToNumber(bytesToHex(bytes.slice().reverse()));
-export const numberToBytesLE = (n: bigint | number, len: number): Uint8Array => numberToBytesBE(n, len).reverse();
-
-export const equalBytes = (a: Uint8Array, b: Uint8Array): boolean => {
-    if (a.length !== b.length) return false;
-    let diff = 0;
-    for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
-    return diff === 0;
-}
-
 export const incrementCounterAt = (ctr: Uint8Array, pos: number) => {
     let j = pos;
     while (j < ctr.length) if (++ctr[j++] != 0) break;

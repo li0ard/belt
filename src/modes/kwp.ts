@@ -1,7 +1,7 @@
-import { concatBytes } from "@li0ard/gost3413/dist/utils.js";
 import { decryptWBL, encryptWBL } from "../index.js";
-import { equalBytes } from "../utils.js";
 import { BLOCK_SIZE } from "../const.js";
+import { concatBytes, type TArg, type TRet } from "@noble/hashes/utils.js";
+import { equalBytes } from "@li0ard/gost3413";
 
 /**
  * Wrap key using the Keywrap (KWP) mode
@@ -9,7 +9,11 @@ import { BLOCK_SIZE } from "../const.js";
  * @param data Key to be wrapped
  * @param iv Initialization vector
  */
-export const wrapKey = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): Uint8Array => {
+export const wrapKey = (
+    key: TArg<Uint8Array>,
+    data: TArg<Uint8Array>,
+    iv: TArg<Uint8Array>
+): TRet<Uint8Array> => {
     if (iv.length !== BLOCK_SIZE) throw new Error("Invalid IV size");
     return encryptWBL(key, concatBytes(data, iv));
 }
@@ -20,10 +24,14 @@ export const wrapKey = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): Uint
  * @param data Key to be unwrapped
  * @param iv Initialization vector
  */
-export const unwrapKey = (key: Uint8Array, data: Uint8Array, iv: Uint8Array): Uint8Array => {
-    let raw = decryptWBL(key, data)
-    let unwrappedKey = raw.slice(0, -BLOCK_SIZE), ivC = raw.slice(-BLOCK_SIZE);
+export const unwrapKey = (
+    key: TArg<Uint8Array>,
+    data: TArg<Uint8Array>,
+    iv: TArg<Uint8Array>
+): TRet<Uint8Array> => {
+    const raw = decryptWBL(key, data)
+    const unwrappedKey = raw.slice(0, -BLOCK_SIZE), ivC = raw.slice(-BLOCK_SIZE);
     if(!equalBytes(ivC, iv)) throw new Error("Bad data or IV");
 
-    return unwrappedKey
+    return unwrappedKey;
 }

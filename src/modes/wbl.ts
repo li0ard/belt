@@ -1,13 +1,17 @@
+import type { TArg } from "@noble/hashes/utils.js";
 import { BLOCK_SIZE } from "../const.js";
 import { Belt } from "../index.js";
-import { numberToBytesLE } from "../utils.js";
+import { numberToBytesLE, type TRet } from "@li0ard/gost3413";
 
 /**
  * Encrypts data using the Wide block (WBL) mode
  * @param key Encryption key
  * @param in_ Data to be encrypted
  */
-export const encryptWBL = (key: Uint8Array, in_: Uint8Array): Uint8Array => {
+export const encryptWBL = (
+    key: TArg<Uint8Array>,
+    in_: TArg<Uint8Array>
+): TRet<Uint8Array> => {
     const cipher = new Belt(key);
 
     const data = new Uint8Array(in_);
@@ -39,7 +43,10 @@ export const encryptWBL = (key: Uint8Array, in_: Uint8Array): Uint8Array => {
  * @param key Encryption key
  * @param in_ Data to be decrypted
  */
-export const decryptWBL = (key: Uint8Array, in_: Uint8Array): Uint8Array => {
+export const decryptWBL = (
+    key: TArg<Uint8Array>,
+    in_: TArg<Uint8Array>
+): TRet<Uint8Array> => {
     const cipher = new Belt(key);
 
     const data = new Uint8Array(in_);
